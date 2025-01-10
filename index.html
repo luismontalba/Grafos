@@ -67,7 +67,7 @@
   var hh = String(today.getHours()).padStart(2, '0');
   var mm = String(today.getMinutes()).padStart(2, '0');
   var ss = String(today.getSeconds()).padStart(2, '0');
-  // html elements
+  // Global html elements variables
   var container = document.getElementById('mynetwork');
   var detailContainer = document.getElementById('detailContainer');
   var labelInput = document.getElementById('labelInput');
@@ -75,7 +75,7 @@
   var descriptionInput = document.getElementById('descriptionInput');
   var saveDetailButton = document.getElementById('saveDetailButton');
 
-  // Function debouncing function
+  // Function debouncing another function
   function debounce(func, wait) {
     let timeout;
     return function() {
@@ -119,7 +119,6 @@
     edges: edges
   };
   var options = {
-    autoResize: true,
     interaction: {
       hover: true,
       multiselect: true,
@@ -156,6 +155,9 @@
       },
       minVelocity: 3,
       timestep: 0.35
+    },
+    nodes: {
+      shape: 'box'
     },
     edges: {
       smooth: {
