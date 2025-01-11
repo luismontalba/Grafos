@@ -1,0 +1,53 @@
+#fileContainer, #filterContainer, #detailContainer {
+	display: block;
+	background: white;
+	border: 1px solid black;
+	padding: 10px;
+	position: absolute;
+  }
+  
+  #fileContainer {
+	bottom: 0;
+	right: 0;
+  }
+  
+  #filterContainer {
+	top: 0;
+	right: 0;
+	padding-bottom: 20px;
+	margin-bottom: 50px;
+  }
+  
+  #detailContainer {
+	display: none;
+	bottom: 0;
+	left: 0;
+	padding-bottom: 20px;
+	margin-bottom: 50px;
+  }
+  
+  #descriptionInput {
+	width: 100%;
+	height: 150px;
+  }
+  
+  #saveButton, #clearButton {
+	display: block;
+  }
+  
+  #tagsContainer {
+	margin-top: 10px;
+  }
+  
+  .tag {
+	display: inline-block;
+	background-color: #ddd;
+	border-radius: 4px;
+	padding: 2px 5px;
+	margin: 2px;
+  }
+  
+  .delete-tag {
+	cursor: pointer;
+	margin-left: 5px;
+  }

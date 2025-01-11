@@ -6,6 +6,7 @@ Features:
 * Nodes always ordered by date
 * Today date assigned when creating new node
 * Impossible edges highlighted in red
+* Tags filter to search nodes in view
 
 You can test in:
 https://luismontalba.github.io/grafos/index.html
