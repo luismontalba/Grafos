@@ -252,15 +252,15 @@
 
   // Load data from Local Storage
   function loadFromLocalStorage() {
-  var storedData = localStorage.getItem('graphData');
-  if (storedData) {
-    var graphData = JSON.parse(storedData);
-    nodes.clear();
-    nodes.add(graphData.nodes);
-    edges.clear();
-    edges.add(graphData.edges);
+    var storedData = localStorage.getItem('graphData');
+    if (storedData) {
+      var graphData = JSON.parse(storedData);
+      nodes.clear();
+      nodes.add(graphData.nodes);
+      edges.clear();
+      edges.add(graphData.edges);
+    }
   }
-}
 
   // Function saving in Local Storage
   function saveToLocalStorage() {
