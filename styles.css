@@ -31,10 +31,6 @@
 	height: 150px;
   }
   
-  #saveButton, #clearButton {
-	display: block;
-  }
-  
   #tagsContainer {
 	margin-top: 10px;
   }

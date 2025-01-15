@@ -133,7 +133,7 @@ function sortNodesByDate() {
   allNodes.sort((a, b) => new Date(a.date) - new Date(b.date));
   let xPosition = -allNodes.length * 75;
   allNodes.forEach(node => {
-    nodes.update({ id: node.id, x: xPosition });
+    nodes.update({ id: node.id, x: xPosition});
     xPosition += 150;
   });
 }
@@ -317,10 +317,6 @@ function saveToLocalStorage() {
   localStorage.setItem('graphData', JSON.stringify(graphData));
 }
 const debouncedSaveToLocalStorage = debounce(saveToLocalStorage, 1000);
-document.getElementById('saveButton').addEventListener('click', debouncedSaveToLocalStorage);
-
-// Clearing local storage
-document.getElementById('clearButton').addEventListener('click', () => localStorage.clear());
 
 // Exporting datos to JSON file
 document.getElementById('exportButton').addEventListener('click', function() {
