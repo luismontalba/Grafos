@@ -53,9 +53,9 @@ const debounce = (func, wait) => {
 // Creating a network
 const nodes = new vis.DataSet([
   {id: 1, label: 'Node 1\n2025-01-01', date: '2025-01-01', description: 'Descripción del Nodo 1', tags: ['tag1']},
-  {id: 2, label: 'Node 2\n2025-02-01', date: '2025-02-01', description: 'Descripción del Nodo 2', tags: ['tag2']},
+  {id: 2, label: 'Node 2\n2025-03-01', date: '2025-03-01', description: 'Descripción del Nodo 2', tags: ['tag2']},
   {id: 3, label: 'Node 3\n2025-03-01', date: '2025-03-01', description: 'Descripción del Nodo 3', tags: ['tag3']},
-  {id: 4, label: 'Node 4\n2025-04-01', date: '2025-04-01', description: 'Descripción del Nodo 4', tags: ['tag4']},
+  {id: 4, label: 'Node 4\n2025-03-01', date: '2025-03-01', description: 'Descripción del Nodo 4', tags: ['tag4']},
   {id: 5, label: 'Node 5\n2025-05-01', date: '2025-05-01', description: 'Descripción del Nodo 5', tags: ['tag5']}
 ]);
 
@@ -127,14 +127,23 @@ function fixCanvas() {
   ctx.scale(2, 2);
 }
 
-// Function sorting node by date
+// Function sorting nodes by date
 function sortNodesByDate() {
   const allNodes = nodes.get();
-  allNodes.sort((a, b) => new Date(a.date) - new Date(b.date));
+  allNodes.sort((a, b) => {
+    const dateComparison = new Date(a.date) - new Date(b.date);
+    return dateComparison !== 0 ? dateComparison : b.y - a.y;
+  });
   let xPosition = -allNodes.length * 75;
+  let yPosition = allNodes.length * 75;
+  let date = allNodes[0].date;
   allNodes.forEach(node => {
-    nodes.update({ id: node.id, x: xPosition});
-    xPosition += 150;
+    if (node.date > date) {
+      xPosition += 125;
+    }
+    yPosition -= 75;
+    date = node.date;
+    nodes.update({ id: node.id, x: xPosition, y: yPosition });
   });
 }
 
