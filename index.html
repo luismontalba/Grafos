@@ -8,12 +8,15 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body onload="init();" onpageshow="init();">
 
 <div id="mynetwork"></div>
 <div id="filterContainer">
   <p>Filtrar</p>
   <div id="filterTagsContainer"></div>
+  <br>
+  <button id="updateToday">Actualizar<br>fecha</button>
 </div>
 <div id="detailContainer">
   <input type="text" id="labelInput">

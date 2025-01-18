@@ -4,11 +4,11 @@ function init() {
   loadFromLocalStorage();
   sortNodesByDate();
   fixCanvas();
-  redraw();
+  fixDraw();
   updateTagsFilter();
 }
 
-function redraw() {
+function fixDraw() {
 	const allNodes = nodes.get();
 	allNodes.forEach(node => {
 	  nodes.update({id: node.id, shape: 'box'});
@@ -31,6 +31,7 @@ const getTodayLongDate = () => `${getTodayDate()}--${hh}-${mm}-${ss}`;
 const container = document.getElementById('mynetwork');
 const filterContainer = document.getElementById('filterContainer');
 const filterTagsContainer = document.getElementById('filterTagsContainer');
+const updateToday = document.getElementById('updateToday');
 const detailContainer = document.getElementById('detailContainer');
 const labelInput = document.getElementById('labelInput');
 const dateInput = document.getElementById('dateInput');
@@ -39,6 +40,8 @@ const saveDetailButton = document.getElementById('saveDetailButton');
 const tagInput = document.getElementById('tagInput');
 const addTagButton = document.getElementById('addTagButton');
 const tagsList = document.getElementById('tagsList');
+const exportButton = document.getElementById('exportButton');
+const importButton = document.getElementById('importButton');
 
 // Debuncing function
 const debounce = (func, wait) => {
@@ -225,6 +228,24 @@ filterTagsContainer.addEventListener("change", function(event) {
   debouncedSaveToLocalStorage();
 });
 
+// Event updating to today date
+updateToday.addEventListener('click', function(event) {
+  const today = getTodayDate();
+  const allNodes = nodes.get();
+  allNodes.forEach(node => {
+    if (node.date < today) {
+      nodes.update({
+        id: node.id,
+        date: today,
+        label: `${node.label.split('\n')[0]}\n${today}`
+      });
+    }
+  })
+  sortNodesByDate();
+  alertEdges();
+  debouncedSaveToLocalStorage();
+});
+
 // Event displaying node details
 let selectedNodeId = null;
 network.on("click", function (params) {
@@ -236,6 +257,8 @@ network.on("click", function (params) {
     dateInput.value = node.date;
     descriptionInput.value = node.description;
     updateTagsList(node.tags);
+  } else {
+    detailContainer.style.display = 'none';
   }
 });
 
@@ -269,7 +292,6 @@ addTagButton.addEventListener('click', function() {
       const node = nodes.get(selectedNodeId);
       if (!node.tags.includes(tag)) {
         node.tags.push(tag);
-        nodes.update(node);
         updateTagsList(node.tags);
         tagInput.value = '';
       }
@@ -289,7 +311,6 @@ function updateTagsList(tags) {
     deleteButton.addEventListener('click', function() {
       const node = nodes.get(selectedNodeId);
       node.tags = node.tags.filter(t => t !== tag);
-      nodes.update(node);
       updateTagsList(node.tags);
     });
     tagElement.appendChild(deleteButton);
@@ -328,7 +349,7 @@ function saveToLocalStorage() {
 const debouncedSaveToLocalStorage = debounce(saveToLocalStorage, 1000);
 
 // Exporting datos to JSON file
-document.getElementById('exportButton').addEventListener('click', function() {
+exportButton.addEventListener('click', function() {
   const graphData = {
     nodes: nodes.get().map(node => {
       const position = network.getPositions([node.id])[node.id];
@@ -347,7 +368,7 @@ document.getElementById('exportButton').addEventListener('click', function() {
 });
 
 // Importing data from JSON file
-document.getElementById('importButton').addEventListener('change', function(event) {
+importButton.addEventListener('change', function(event) {
   const file = event.target.files[0];
   const reader = new FileReader();
   reader.onload = function(event) {
