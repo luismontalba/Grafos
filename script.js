@@ -139,10 +139,18 @@ function sortNodesByDate() {
   });
   let xPosition = -allNodes.length * 75;
   let yPosition = allNodes.length * 75;
-  let date = allNodes[0].date;
+  let date = new Date(0);
+  let children = [];
   allNodes.forEach(node => {
+    const connectedNodes = network.getConnectedNodes(node.id, 'to');
     if (node.date > date) {
+      children = connectedNodes;
       xPosition += 125;
+    } else {
+      children.push(...connectedNodes);
+      if (children.flat().includes(node.id)) {
+        xPosition += 125;
+      } 
     }
     yPosition -= 75;
     date = node.date;
@@ -157,6 +165,7 @@ network.on("dragEnd", function (params) {
     nodes.update({ id: nodeId, x: position.x, y: position.y });
   });
   sortNodesByDate();
+  alertEdges();
   debouncedSaveToLocalStorage();
 });
 
@@ -169,11 +178,9 @@ function alertEdges() {
     const to = edge.to;
     const nodeFrom = allNodes.find(node => node.id === from);
     const nodeTo = allNodes.find(node => node.id === to);
-    const dateFrom = nodeFrom.date;
-    const dateTo = nodeTo.date;
     edges.update({
       id: edge.id,
-      color: { color: dateFrom > dateTo ? "red" : "blue" }
+      color: { color: nodeFrom.date > nodeTo.date || nodeFrom.y < nodeTo.y ? "red" : "blue" }
     });
   });
 }
