@@ -16,33 +16,6 @@ function fixDraw() {
 	debouncedSaveToLocalStorage();
 }
 
-// Dating variables
-const today = new Date();
-const yyyy = today.getFullYear();
-const MM = String(today.getMonth() + 1).padStart(2, '0');
-const dd = String(today.getDate()).padStart(2, '0');
-const hh = String(today.getHours()).padStart(2, '0');
-const mm = String(today.getMinutes()).padStart(2, '0');
-const ss = String(today.getSeconds()).padStart(2, '0');
-const getTodayDate = () => `${yyyy}-${MM}-${dd}`;
-const getTodayLongDate = () => `${getTodayDate()}--${hh}-${mm}-${ss}`;
-
-// HTML references
-const container = document.getElementById('mynetwork');
-const filterContainer = document.getElementById('filterContainer');
-const filterTagsContainer = document.getElementById('filterTagsContainer');
-const updateToday = document.getElementById('updateToday');
-const detailContainer = document.getElementById('detailContainer');
-const labelInput = document.getElementById('labelInput');
-const dateInput = document.getElementById('dateInput');
-const descriptionInput = document.getElementById('descriptionInput');
-const saveDetailButton = document.getElementById('saveDetailButton');
-const tagInput = document.getElementById('tagInput');
-const addTagButton = document.getElementById('addTagButton');
-const tagsList = document.getElementById('tagsList');
-const exportButton = document.getElementById('exportButton');
-const importButton = document.getElementById('importButton');
-
 // Debuncing function
 const debounce = (func, wait) => {
   let timeout;
@@ -53,12 +26,60 @@ const debounce = (func, wait) => {
   };
 };
 
+// Function formating dates
+function formatDate (date) {
+  const yyyy = date.getFullYear();
+  const MM = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${MM}-${dd}`;
+}
+
+//Function long formating dates
+function formatLongDate (date) {
+  const shortDate = formatDate(date);
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return shortDate+`--${hh}-${mm}-${ss}`;
+}
+
+// Function to add days to a date 
+function addDays(date, days) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+// Dating variables
+const today = new Date();
+const getTodayDate = () => formatDate(today);
+const getTodayLongDate = () => formatLongDate(today);
+
+
+// HTML references
+const container = document.getElementById('mynetwork');
+const filterContainer = document.getElementById('filterContainer');
+const filterTagsContainer = document.getElementById('filterTagsContainer');
+const updateToday = document.getElementById('updateToday');
+const detailContainer = document.getElementById('detailContainer');
+const labelInput = document.getElementById('labelInput');
+const dateInput = document.getElementById('dateInput');
+const cdateInput = document.getElementById('cdateInput');
+const timeInput = document.getElementById('timeInput');
+const descriptionInput = document.getElementById('descriptionInput');
+const saveDetailButton = document.getElementById('saveDetailButton');
+const tagInput = document.getElementById('tagInput');
+const addTagButton = document.getElementById('addTagButton');
+const tagsList = document.getElementById('tagsList');
+const exportButton = document.getElementById('exportButton');
+const importButton = document.getElementById('importButton');
+
 // Creating a network
 const nodes = new vis.DataSet([
   {id: 1, label: 'Node 1\n2025-01-01', date: '2025-01-01', description: 'Descripción del Nodo 1', tags: ['tag1']},
-  {id: 2, label: 'Node 2\n2025-03-01', date: '2025-03-01', description: 'Descripción del Nodo 2', tags: ['tag2']},
+  {id: 2, label: 'Node 2\n2025-03-01', date: '2025-03-01', time: '2', description: 'Descripción del Nodo 2', tags: ['tag2']},
   {id: 3, label: 'Node 3\n2025-03-01', date: '2025-03-01', description: 'Descripción del Nodo 3', tags: ['tag3']},
-  {id: 4, label: 'Node 4\n2025-03-01', date: '2025-03-01', description: 'Descripción del Nodo 4', tags: ['tag4']},
+  {id: 4, label: 'Node 4\n2025-03-01', date: '2025-03-01', time: '15', description: 'Descripción del Nodo 4', tags: ['tag4']},
   {id: 5, label: 'Node 5\n2025-05-01', date: '2025-05-01', description: 'Descripción del Nodo 5', tags: ['tag5']}
 ]);
 
@@ -100,15 +121,6 @@ const options = {
   },
   physics: {
     enabled: false,
-    solver: 'forceAtlas2Based',
-    forceAtlas2Based: {
-      gravitationalConstant: -50,
-      centralGravity: 0.01,
-      springLength: 100,
-      springConstant: 0.08,
-    },
-    minVelocity: 3,
-    timestep: 0.35
   },
   nodes: { shape: 'box' },
   edges: {
@@ -185,6 +197,103 @@ function alertEdges() {
   });
 }
 
+// Event displaying node details
+let selectedNodeId = null;
+network.on("click", function (params) {
+  if (params.nodes.length === 1) {
+    selectedNodeId = params.nodes[0];
+    const node = nodes.get(selectedNodeId);
+    detailContainer.style.display = 'block';
+    labelInput.value = node.label.split('\n')[0];
+    dateInput.value = node.date;
+    cdateInput.value = node.cdate;
+    timeInput.value = node.time;
+    descriptionInput.value = node.description;
+    updateTagsList(node.tags);
+  } else {
+    detailContainer.style.display = 'none';
+  }
+});
+
+// Function calculating date
+function dateCalc() {
+  const allNodes = nodes.get();
+  allNodes.forEach(node => { 
+    const parentsIds = network.getConnectedNodes(node.id, 'from');
+    const parentsNodes = nodes.get(parentsIds);
+    const datesFromParents = parentsNodes.map(parent => addDays(new Date(parent.date), Number(parent.time)));
+    const newCdate = formatDate(new Date(Math.max.apply(null,datesFromParents)));
+    nodes.update({id: node.id, cdate: newCdate});
+  });
+}
+
+// Event saving node details
+saveDetailButton.addEventListener('click', function() {
+  if (selectedNodeId !== null) {
+    const newLabel = labelInput.value;
+    const newDate = dateInput.value;
+    const newTime = timeInput.value
+    const newDescription = descriptionInput.value;
+    const newTags = getTagsFromUI();
+    nodes.update({
+      id: selectedNodeId,
+      label: `${newLabel}\n${newDate}`,
+      date: newDate,
+      time: newTime,
+      description: newDescription,
+      tags: newTags
+    });
+    detailContainer.style.display = 'none';
+    sortNodesByDate();
+    alertEdges();
+    updateTagsFilter();
+    dateCalc();
+    debouncedSaveToLocalStorage();
+  }
+});
+
+// Managing tags in node details
+addTagButton.addEventListener('click', function() {
+  if (selectedNodeId !== null) {
+    const tag = tagInput.value.trim();
+    if (tag) {
+      const node = nodes.get(selectedNodeId);
+      if (!node.tags.includes(tag)) {
+        node.tags.push(tag);
+        updateTagsList(node.tags);
+        tagInput.value = '';
+      }
+    }
+  }
+});
+
+function updateTagsList(tags) {
+  tagsList.innerHTML = '';
+  tags.forEach(tag => {
+    const tagElement = document.createElement('span');
+    tagElement.className = 'tag';
+    tagElement.textContent = tag;
+    const deleteButton = document.createElement('span');
+    deleteButton.className = 'delete-tag';
+    deleteButton.textContent = 'x';
+    deleteButton.addEventListener('click', function() {
+      const node = nodes.get(selectedNodeId);
+      node.tags = node.tags.filter(t => t !== tag);
+      updateTagsList(node.tags);
+    });
+    tagElement.appendChild(deleteButton);
+    tagsList.appendChild(tagElement);
+  });
+}
+
+function getTagsFromUI() {
+  const tags = [];
+  tagsList.querySelectorAll('.tag').forEach(tagElement => {
+    tags.push(tagElement.textContent.slice(0, -1));
+  });
+  return tags;
+}
+
 // Displaying box with tags to be filtered
 let tagsChecked = [];
 function updateTagsFilter() {
@@ -252,86 +361,6 @@ updateToday.addEventListener('click', function(event) {
   alertEdges();
   debouncedSaveToLocalStorage();
 });
-
-// Event displaying node details
-let selectedNodeId = null;
-network.on("click", function (params) {
-  if (params.nodes.length === 1) {
-    selectedNodeId = params.nodes[0];
-    const node = nodes.get(selectedNodeId);
-    detailContainer.style.display = 'block';
-    labelInput.value = node.label.split('\n')[0];
-    dateInput.value = node.date;
-    descriptionInput.value = node.description;
-    updateTagsList(node.tags);
-  } else {
-    detailContainer.style.display = 'none';
-  }
-});
-
-// Event saving node details
-saveDetailButton.addEventListener('click', function() {
-  if (selectedNodeId !== null) {
-    const newLabel = labelInput.value;
-    const newDate = dateInput.value;
-    const newDescription = descriptionInput.value;
-    const newTags = getTagsFromUI();
-    nodes.update({
-      id: selectedNodeId,
-      label: `${newLabel}\n${newDate}`,
-      date: newDate,
-      description: newDescription,
-      tags: newTags
-    });
-    detailContainer.style.display = 'none';
-    sortNodesByDate();
-    alertEdges();
-    updateTagsFilter();
-    debouncedSaveToLocalStorage();
-  }
-});
-
-// Managing tags in node details
-addTagButton.addEventListener('click', function() {
-  if (selectedNodeId !== null) {
-    const tag = tagInput.value.trim();
-    if (tag) {
-      const node = nodes.get(selectedNodeId);
-      if (!node.tags.includes(tag)) {
-        node.tags.push(tag);
-        updateTagsList(node.tags);
-        tagInput.value = '';
-      }
-    }
-  }
-});
-
-function updateTagsList(tags) {
-  tagsList.innerHTML = '';
-  tags.forEach(tag => {
-    const tagElement = document.createElement('span');
-    tagElement.className = 'tag';
-    tagElement.textContent = tag;
-    const deleteButton = document.createElement('span');
-    deleteButton.className = 'delete-tag';
-    deleteButton.textContent = 'x';
-    deleteButton.addEventListener('click', function() {
-      const node = nodes.get(selectedNodeId);
-      node.tags = node.tags.filter(t => t !== tag);
-      updateTagsList(node.tags);
-    });
-    tagElement.appendChild(deleteButton);
-    tagsList.appendChild(tagElement);
-  });
-}
-
-function getTagsFromUI() {
-  const tags = [];
-  tagsList.querySelectorAll('.tag').forEach(tagElement => {
-    tags.push(tagElement.textContent.slice(0, -1));
-  });
-  return tags;
-}
 
 // Loading from local Storage
 function loadFromLocalStorage() {

@@ -8,6 +8,7 @@ Features:
 * Impossible edges highlighted in red
 * Tags filter to search nodes in view
 * Button to update past dates to today dates
+* Earlies dates calculated depending on duration of nodes
 
 You can test in:
 <https://luismontalba.github.io/grafos/index.html>
