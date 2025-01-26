@@ -9,11 +9,11 @@ function init() {
 }
 
 function fixDraw() {
-	const allNodes = nodes.get();
-	allNodes.forEach(node => {
-	  nodes.update({id: node.id, shape: 'box'});
-	});
-	debouncedSaveToLocalStorage();
+  const allNodes = nodes.get();
+  allNodes.forEach(node => {
+    nodes.update({id: node.id, shape: 'box'});
+  });
+  debouncedSaveToLocalStorage();
 }
 
 // Auxiliar tools
@@ -62,6 +62,7 @@ const container = document.getElementById('mynetwork');
 const filterContainer = document.getElementById('filterContainer');
 const filterTagsContainer = document.getElementById('filterTagsContainer');
 const updateToday = document.getElementById('updateToday');
+const optimizeDates = document.getElementById('optimizeDates');
 const detailContainer = document.getElementById('detailContainer');
 const labelInput = document.getElementById('labelInput');
 const dateInput = document.getElementById('dateInput');
@@ -112,14 +113,12 @@ const options = {
       data.tags = [];
       callback(data);
       updateView();
-      debouncedSaveToLocalStorage();
     },
     addEdge: function (data, callback) {
       if (data.from !== data.to) {
         data.arrows = 'to';
         callback(data);
         updateView();
-        debouncedSaveToLocalStorage();
       }
     }
   },
@@ -152,7 +151,7 @@ function updateView() {
   alertEdges();
   dateCalc();
   updateTagsFilter();
-  network. redraw();
+  debouncedSaveToLocalStorage();
 }
 
 // Function sorting nodes by date
@@ -202,7 +201,11 @@ function alertEdges() {
 // Function calculating date
 function dateCalc() {
   const allNodes = nodes.get();
-  allNodes.forEach(node => { 
+  allNodes.sort((a, b) => {
+    const dateComparison = new Date(a.date) - new Date(b.date);
+    return dateComparison !== 0 ? dateComparison : b.y - a.y;
+  });
+  allNodes.forEach(node => {
     const parentsIds = network.getConnectedNodes(node.id, 'from');
     const parentsNodes = nodes.get(parentsIds);
     if (parentsNodes.length > 0) {
@@ -232,6 +235,7 @@ function dateCalc() {
   });
 }
 
+// Function updating box with tags to be filtered
 let tagsChecked = [];
 function updateTagsFilter() {
   filterTagsContainer.innerHTML = '';
@@ -270,10 +274,8 @@ network.on("dragEnd", function (params) {
     nodes.update({ id: nodeId, x: position.x, y: position.y });
   });
   updateView();
-  debouncedSaveToLocalStorage();
 });
 
-// Displaying box with tags to be filtered
 // Event filtering nodes by selected tags
 filterTagsContainer.addEventListener("change", function(event) {
   const allNodes = nodes.get();
@@ -307,7 +309,21 @@ updateToday.addEventListener('click', function(event) {
     }
   })
   updateView();
-  debouncedSaveToLocalStorage();
+});
+
+// Event optimizing dates
+optimizeDates.addEventListener('click', function(event) {
+  const allNodes = nodes.get();
+  allNodes.sort((a, b) => {
+    const dateComparison = new Date(a.date) - new Date(b.date);
+    return dateComparison !== 0 ? dateComparison : b.y - a.y;
+  });
+  allNodes.forEach(node => {
+    const getNode = nodes.get(node.id);
+    dateCalc();
+    nodes.update({id: getNode.id, date: getNode.cdate, label: `${getNode.label.split('\n')[0]}\n${getNode.cdate}`,});
+  });
+  updateView();
 });
 
 // Woking with details
@@ -375,7 +391,7 @@ saveDetailButton.addEventListener('click', function() {
   if (selectedNodeId !== null) {
     const newLabel = labelInput.value;
     const newDate = dateInput.value;
-    const newTime = timeInput.value
+    const newTime = timeInput.value;
     const newDescription = descriptionInput.value;
     const newTags = getTagsFromUI();
     nodes.update({
@@ -387,8 +403,8 @@ saveDetailButton.addEventListener('click', function() {
       tags: newTags
     });
     detailContainer.style.display = 'none';
+    dateCalc(); // Tu update with cdate calculated
     updateView();
-    debouncedSaveToLocalStorage();
   }
 });
 
@@ -445,7 +461,6 @@ importButton.addEventListener('change', function(event) {
     edges.clear();
     edges.add(graphData.edges);
     updateView();
-    debouncedSaveToLocalStorage();
   };
   reader.readAsText(file);
 });

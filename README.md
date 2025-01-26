@@ -9,6 +9,7 @@ Features:
 * Tags filter to search nodes in view
 * Button to update past dates to today dates
 * Earlies dates calculated depending on duration of nodes
+* Button to optimize dates to the earliest one
 
 You can test in:
 <https://luismontalba.github.io/grafos/index.html>
