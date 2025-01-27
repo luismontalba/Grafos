@@ -2,13 +2,18 @@
 document.addEventListener('DOMContentLoaded', init);
 
 function init() {
+  if (init.called) return;
+  init.called = true;
+  console.log('init');
   loadFromLocalStorage();
   fixCanvas();
   fixDraw();
+  dateCalc();
   updateView();
 }
 
 function fixDraw() {
+  console.log('fixDraw');
   const allNodes = nodes.get();
   allNodes.forEach(node => {
     nodes.update({id: node.id, shape: 'box'});
@@ -29,6 +34,7 @@ const debounce = (func, wait) => {
 
 // Function formating dates
 function formatDate (date) {
+  console.log('formatDate');
   const yyyy = date.getFullYear();
   const MM = String(date.getMonth() + 1).padStart(2, '0');
   const dd = String(date.getDate()).padStart(2, '0');
@@ -37,6 +43,7 @@ function formatDate (date) {
 
 //Function long formating dates
 function formatLongDate (date) {
+  console.log('formatLongDate');
   const shortDate = formatDate(date);
   const hh = String(date.getHours()).padStart(2, '0');
   const mm = String(date.getMinutes()).padStart(2, '0');
@@ -46,6 +53,7 @@ function formatLongDate (date) {
 
 // Function to add days to a date 
 function addDays(date, days) {
+  console.log('addDays');
   const result = new Date(date);
   result.setDate(result.getDate() + days);
   return result;
@@ -78,7 +86,7 @@ const importButton = document.getElementById('importButton');
 
 // Creating a network
 const nodes = new vis.DataSet([
-  {id: 1, label: 'Node 1\n2025-01-01\n0d', date: '2025-01-01', cdate: '', time: '0',description: 'Descripción del Nodo 1', tags: ['tag1']},
+  {id: 1, label: 'Node 1\n2025-01-01\n0d', date: '2025-01-01', cdate: '', time: '3',description: 'Descripción del Nodo 1', tags: ['tag1']},
   {id: 2, label: 'Node 2\n2025-02-01\n40d', date: '2025-02-01', cdate: '', time: '40', description: 'Descripción del Nodo 2', tags: ['tag2']},
   {id: 3, label: 'Node 3\n2025-03-01\n0d', date: '2025-03-01', cdate: '', time: '0', description: 'Descripción del Nodo 3', tags: ['tag3']},
   {id: 4, label: 'Node 4\n2025-04-01\n10d', date: '2025-04-01', cdate: '', time: '10', description: 'Descripción del Nodo 4', tags: ['tag4']},
@@ -105,6 +113,7 @@ const options = {
   manipulation: {
     enabled: true,
     addNode: function (data, callback) {
+      console.log('addNode');
       data.label = `Nuevo objetivo\n${getTodayDate()}\n0d`;
       data.date = getTodayDate();
       data.cdate = '';
@@ -112,12 +121,15 @@ const options = {
       data.description = '';
       data.tags = [];
       callback(data);
+      dateCalc();
       updateView();
     },
     addEdge: function (data, callback) {
+      console.log('addEdge');
       if (data.from !== data.to) {
         data.arrows = 'to';
         callback(data);
+        dateCalc();
         updateView();
       }
     }
@@ -131,7 +143,7 @@ const options = {
       type: 'continuous',
       forceDirection: 'none',
       roundness: 0.5
-    }
+    },
   },
   layout: { randomSeed: 3 }
 };
@@ -139,6 +151,7 @@ const options = {
 const network = new vis.Network(container, data, options);
 
 function fixCanvas() {
+  console.log('fixCanvas');
   const canvas = document.getElementsByTagName('canvas')[0];
   canvas.setAttribute('height', '10000');
   const ctx = canvas.getContext("2d");
@@ -147,15 +160,16 @@ function fixCanvas() {
 
 // Updating the view
 function updateView() {
+  console.log('updateView');
   sortNodesByDate();
   alertEdges();
-  dateCalc();
   updateTagsFilter();
   debouncedSaveToLocalStorage();
 }
 
 // Function sorting nodes by date
 function sortNodesByDate() {
+  console.log('sortNodesByDate');
   const allNodes = nodes.get();
   allNodes.sort((a, b) => {
     const dateComparison = new Date(a.date) - new Date(b.date);
@@ -166,8 +180,9 @@ function sortNodesByDate() {
   let date = new Date(0);
   let children = [];
   allNodes.forEach(node => {
+    let newDate = new Date(node.date);
     const connectedNodes = network.getConnectedNodes(node.id, 'to');
-    if (node.date > date) {
+    if (newDate > date) {
       children = connectedNodes;
       xPosition += 125;
     } else {
@@ -177,29 +192,32 @@ function sortNodesByDate() {
       } 
     }
     yPosition -= 75;
-    date = node.date;
+    date = newDate;
     nodes.update({ id: node.id, x: xPosition, y: yPosition });
   });
 }
 
 // Function alerting impossible edges going from future to past
 function alertEdges() {
+  console.log('alertEdges');
   const allNodes = nodes.get();
   const allEdges = edges.get();
   allEdges.forEach(edge => {
+    const color= edge.color.color;
     const from = edge.from;
     const to = edge.to;
     const nodeFrom = allNodes.find(node => node.id === from);
     const nodeTo = allNodes.find(node => node.id === to);
     edges.update({
       id: edge.id,
-      color: { color: nodeFrom.date > nodeTo.date || nodeFrom.y < nodeTo.y ? "red" : "blue" }
+      color: { color: nodeFrom.date > nodeTo.date || nodeFrom.y < nodeTo.y ? "red" : `${color}` }
     });
   });
 }
 
 // Function calculating date
 function dateCalc() {
+  console.log('dateCalc');
   const allNodes = nodes.get();
   allNodes.sort((a, b) => {
     const dateComparison = new Date(a.date) - new Date(b.date);
@@ -213,23 +231,26 @@ function dateCalc() {
       const newCdate = formatDate(new Date(Math.max.apply(null, datesFromParents)));
       nodes.update({
         id: node.id,
-        cdate: newCdate,
-        font: { color: new Date(node.date) < new Date(node.cdate) ? "red" : "#343434" }
+        cdate: newCdate
       });
     } else {
       nodes.update({
         id: node.id,
-        cdate: node.date,
-        font: { color: "#343434" }
+        cdate: node.date
       });
     }
-    const criticalParents = parentsNodes.filter(parent => parent.date === formatDate(addDays(new Date(node.cdate), -Number(node.time))));
+    const updatedNode = nodes.get(node.id);
+    nodes.update({
+      id: node.id,
+      font: { color: new Date(updatedNode.date) < new Date(updatedNode.cdate) ? "red" : "#343434" }
+    });
+    const criticalParents = parentsNodes.filter(parent => parent.date === formatDate(addDays(new Date(updatedNode.cdate), -Number(updatedNode.time))));
     const parentsEdgesIds = network.getConnectedEdges(node.id);
     const parentsEdges = edges.get(parentsEdgesIds);
     parentsEdges.forEach(edge => {
       edges.update({
         id: edge.id,
-        color: { color: criticalParents.map(parent => parent.id).includes(edge.from) && new Date(node.date) < new Date(node.cdate) ? "red" : "blue" }
+        color: { color: criticalParents.map(parent => parent.id).includes(edge.from) && new Date(updatedNode.date) < new Date(updatedNode.cdate) ? "red" : "blue" }
       });
     });
   });
@@ -238,6 +259,7 @@ function dateCalc() {
 // Function updating box with tags to be filtered
 let tagsChecked = [];
 function updateTagsFilter() {
+  console.log('updateTagsFilter');
   filterTagsContainer.innerHTML = '';
   const allNodes = nodes.get();
   const allTags = new Set();
@@ -269,15 +291,19 @@ function updateTagsFilter() {
 // Working with network
 // Event saving node position
 network.on("dragEnd", function (params) {
-  params.nodes.forEach(nodeId => {
-    const position = network.getPositions([nodeId])[nodeId];
-    nodes.update({ id: nodeId, x: position.x, y: position.y });
-  });
-  updateView();
+  if (params.nodes.length >= 1) {
+    console.log('dragEnd');
+    params.nodes.forEach(nodeId => {
+      const position = network.getPositions([nodeId])[nodeId];
+      nodes.update({ id: nodeId, x: position.x, y: position.y });
+    });
+    updateView();
+  }
 });
 
 // Event filtering nodes by selected tags
 filterTagsContainer.addEventListener("change", function(event) {
+  console.log('filterTagsContainer');
   const allNodes = nodes.get();
   if (event.target.checked) {
     tagsChecked.push(event.target.value);
@@ -292,11 +318,12 @@ filterTagsContainer.addEventListener("change", function(event) {
       }
     });
   });
-  debouncedSaveToLocalStorage();
+  updateView();
 });
 
 // Event updating to today date
 updateToday.addEventListener('click', function(event) {
+  console.log('updateToday');
   const today = getTodayDate();
   const allNodes = nodes.get();
   allNodes.forEach(node => {
@@ -308,11 +335,13 @@ updateToday.addEventListener('click', function(event) {
       });
     }
   })
+  dateCalc();
   updateView();
 });
 
 // Event optimizing dates
 optimizeDates.addEventListener('click', function(event) {
+  console.log('optimizeDates');
   const allNodes = nodes.get();
   allNodes.sort((a, b) => {
     const dateComparison = new Date(a.date) - new Date(b.date);
@@ -330,6 +359,7 @@ optimizeDates.addEventListener('click', function(event) {
 // Event displaying node details
 let selectedNodeId = null;
 network.on("click", function (params) {
+  console.log('display detailsclick');
   if (params.nodes.length === 1) {
     selectedNodeId = params.nodes[0];
     const node = nodes.get(selectedNodeId);
@@ -348,6 +378,7 @@ network.on("click", function (params) {
 
 // Managing tags in node details
 addTagButton.addEventListener('click', function() {
+  console.log('addTagButton');
   if (selectedNodeId !== null) {
     const tag = tagInput.value.trim();
     if (tag) {
@@ -361,6 +392,7 @@ addTagButton.addEventListener('click', function() {
   }
 });
 function updateTagsList(tags) {
+  console.log('updateTagsList');
   tagsList.innerHTML = '';
   tags.forEach(tag => {
     const tagElement = document.createElement('span');
@@ -370,6 +402,7 @@ function updateTagsList(tags) {
     deleteButton.className = 'delete-tag';
     deleteButton.textContent = 'x';
     deleteButton.addEventListener('click', function() {
+      console.log('deleteButton');
       const node = nodes.get(selectedNodeId);
       node.tags = node.tags.filter(t => t !== tag);
       updateTagsList(node.tags);
@@ -379,6 +412,7 @@ function updateTagsList(tags) {
   });
 }
 function getTagsFromUI() {
+  console.log('getTagsFromUI');
   const tags = [];
   tagsList.querySelectorAll('.tag').forEach(tagElement => {
     tags.push(tagElement.textContent.slice(0, -1));
@@ -388,6 +422,7 @@ function getTagsFromUI() {
 
 // Event saving node details
 saveDetailButton.addEventListener('click', function() {
+  console.log('saveDetailButton');
   if (selectedNodeId !== null) {
     const newLabel = labelInput.value;
     const newDate = dateInput.value;
@@ -403,7 +438,7 @@ saveDetailButton.addEventListener('click', function() {
       tags: newTags
     });
     detailContainer.style.display = 'none';
-    dateCalc(); // Tu update with cdate calculated
+    dateCalc();
     updateView();
   }
 });
@@ -411,6 +446,7 @@ saveDetailButton.addEventListener('click', function() {
 // Managing persistence
 // Loading from local Storage
 function loadFromLocalStorage() {
+  console.log('loadFromLocalStorage');
   const storedData = localStorage.getItem('graphData');
   if (storedData) {
     const graphData = JSON.parse(storedData);
@@ -423,6 +459,7 @@ function loadFromLocalStorage() {
 
 // Saving to local storage
 function saveToLocalStorage() {
+  console.log('saveToLocalStorage');
   const graphData = {
     nodes: nodes.get(),
     edges: edges.get()
@@ -433,6 +470,7 @@ const debouncedSaveToLocalStorage = debounce(saveToLocalStorage, 1000);
 
 // Exporting datos to JSON file
 exportButton.addEventListener('click', function() {
+  console.log('exportButton');
   const graphData = {
     nodes: nodes.get().map(node => {
       const position = network.getPositions([node.id])[node.id];
@@ -452,14 +490,17 @@ exportButton.addEventListener('click', function() {
 
 // Importing data from JSON file
 importButton.addEventListener('change', function(event) {
+  console.log('importButton');
   const file = event.target.files[0];
   const reader = new FileReader();
   reader.onload = function(event) {
+    console.log('reader.onload');
     const graphData = JSON.parse(event.target.result);
     nodes.clear();
     nodes.add(graphData.nodes);
     edges.clear();
     edges.add(graphData.edges);
+    dateCalc();
     updateView();
   };
   reader.readAsText(file);
