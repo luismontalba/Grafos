@@ -1,6 +1,6 @@
+// starting
 document.addEventListener('DOMContentLoaded', init);
 
-// starting
 function init() {
   loadFromLocalStorage();
   fixCanvas();
@@ -78,11 +78,11 @@ const importButton = document.getElementById('importButton');
 
 // Creating a network
 const nodes = new vis.DataSet([
-  {id: 1, label: 'Node 1\n2025-01-01', date: '2025-01-01', cdate: '', time: '0',description: 'Descripción del Nodo 1', tags: ['tag1']},
-  {id: 2, label: 'Node 2\n2025-02-01', date: '2025-02-01', cdate: '', time: '40', description: 'Descripción del Nodo 2', tags: ['tag2']},
-  {id: 3, label: 'Node 3\n2025-03-01', date: '2025-03-01', cdate: '', time: '0', description: 'Descripción del Nodo 3', tags: ['tag3']},
-  {id: 4, label: 'Node 4\n2025-04-01', date: '2025-04-01', cdate: '', time: '10', description: 'Descripción del Nodo 4', tags: ['tag4']},
-  {id: 5, label: 'Node 5\n2025-05-01', date: '2025-05-01', cdate: '', time: '0', description: 'Descripción del Nodo 5', tags: ['tag5']}
+  {id: 1, label: 'Node 1\n2025-01-01\n0d', date: '2025-01-01', cdate: '', time: '0',description: 'Descripción del Nodo 1', tags: ['tag1']},
+  {id: 2, label: 'Node 2\n2025-02-01\n40d', date: '2025-02-01', cdate: '', time: '40', description: 'Descripción del Nodo 2', tags: ['tag2']},
+  {id: 3, label: 'Node 3\n2025-03-01\n0d', date: '2025-03-01', cdate: '', time: '0', description: 'Descripción del Nodo 3', tags: ['tag3']},
+  {id: 4, label: 'Node 4\n2025-04-01\n10d', date: '2025-04-01', cdate: '', time: '10', description: 'Descripción del Nodo 4', tags: ['tag4']},
+  {id: 5, label: 'Node 5\n2025-05-01\n0d', date: '2025-05-01', cdate: '', time: '0', description: 'Descripción del Nodo 5', tags: ['tag5']}
 ]);
 
 const edges = new vis.DataSet([
@@ -105,7 +105,7 @@ const options = {
   manipulation: {
     enabled: true,
     addNode: function (data, callback) {
-      data.label = `Nuevo Nodo\n${getTodayDate()}`;
+      data.label = `Nuevo objetivo\n${getTodayDate()}\n0d`;
       data.date = getTodayDate();
       data.cdate = '';
       data.time = '0';
@@ -304,7 +304,7 @@ updateToday.addEventListener('click', function(event) {
       nodes.update({
         id: node.id,
         date: today,
-        label: `${node.label.split('\n')[0]}\n${today}`
+        label: `${node.label.split('\n')[0]}\n${today}\n${node.time}d`
       });
     }
   })
@@ -321,7 +321,7 @@ optimizeDates.addEventListener('click', function(event) {
   allNodes.forEach(node => {
     const getNode = nodes.get(node.id);
     dateCalc();
-    nodes.update({id: getNode.id, date: getNode.cdate, label: `${getNode.label.split('\n')[0]}\n${getNode.cdate}`,});
+    nodes.update({id: getNode.id, date: getNode.cdate, label: `${getNode.label.split('\n')[0]}\n${getNode.cdate}\n${node.time}d`,});
   });
   updateView();
 });
@@ -396,7 +396,7 @@ saveDetailButton.addEventListener('click', function() {
     const newTags = getTagsFromUI();
     nodes.update({
       id: selectedNodeId,
-      label: `${newLabel}\n${newDate}`,
+      label: `${newLabel}\n${newDate}\n${newTime}d`,
       date: newDate,
       time: newTime,
       description: newDescription,
